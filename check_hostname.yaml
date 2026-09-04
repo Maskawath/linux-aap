@@ -1,0 +1,8 @@
+---
+- name: Verify Linux Host Connectivity and Identity
+  hosts: all
+  gather_facts: yes
+  tasks:
+    - name: Display the Fully Qualified Domain Name
+      ansible.builtin.debug:
+        msg: "The hostname for this node is: {{ ansible_fqdn }}"
