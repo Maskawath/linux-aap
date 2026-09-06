@@ -1,0 +1,37 @@
+---
+- name: Enterprise Package Management (Install/Remove)
+  hosts: all
+  become: yes
+  tasks:
+    - name: 1. Pre-flight Check - Validate Survey Variables
+      ansible.builtin.assert:
+        that:
+          - pkg_name is defined and pkg_name | length > 0
+          - pkg_state is defined and pkg_state in ['present', 'absent']
+        fail_msg: "CRITICAL: Valid 'pkg_name' and 'pkg_state' (present/absent) must be provided via the AAP Survey."
+        quiet: yes
+
+    - name: 2. INSTALL Pathway
+      ansible.builtin.dnf:
+        name: "{{ pkg_name }}"
+        state: present
+      when: pkg_state == 'present'
+
+    - name: 3. REMOVE Pathway (Enforcing Safety SOPs)
+      block:
+        - name: 3a. Safely stop the service before removal (if applicable)
+          ansible.builtin.systemd:
+            name: "{{ pkg_name }}"
+            state: stopped
+          ignore_errors: yes # Safety: Ignores if the package doesn't have a corresponding service
+
+        - name: 3b. Remove package without breaking dependencies
+          ansible.builtin.dnf:
+            name: "{{ pkg_name }}"
+            state: absent
+            autoremove: no
+      when: pkg_state == 'absent'
+
+    - name: 4. Audit Log Output
+      ansible.builtin.debug:
+        msg: "Successfully ensured {{ pkg_name }} is {{ pkg_state }} on {{ ansible_fqdn }}."
