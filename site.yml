@@ -1,14 +1,30 @@
 ---
-- name: Query NetBox and Print Site Names
+- name: Manage NetBox Sites (Create test-site and List Sites)
   hosts: localhost
   gather_facts: false
   vars:
-    # Set your NetBox URL and API token here or pass via AAP Extra Variables / Environment
+    # HTTP NetBox API Connection Variables
     netbox_url: "{{ lookup('env', 'NETBOX_URL') | default('http://netbox.mylab.local', true) }}"
     netbox_token: "{{ lookup('env', 'NETBOX_TOKEN') | default('your_netbox_api_token_here', true) }}"
 
   tasks:
-    - name: Query NetBox for existing Sites (Read-Only)
+    - name: 1. Create site 'test-site' in NetBox
+      netbox.netbox.netbox_site:
+        netbox_url: "{{ netbox_url }}"
+        netbox_token: "{{ netbox_token }}"
+        validate_certs: false
+        data:
+          name: "test-site"
+          slug: "test-site"
+          status: "active"
+        state: present
+      register: create_site_result
+
+    - name: Display creation result for 'test-site'
+      ansible.builtin.debug:
+        msg: "Created/Verified 'test-site': {{ create_site_result }}"
+
+    - name: 2. Query NetBox for existing Sites (Read-Only)
       netbox.netbox.netbox_site_info:
         netbox_url: "{{ netbox_url }}"
         netbox_token: "{{ netbox_token }}"
@@ -25,5 +41,6 @@
       loop: "{{ netbox_sites.sites }}"
       loop_control:
         label: "{{ item.name }}"
+
 
 
