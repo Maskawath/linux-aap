@@ -1,0 +1,42 @@
+---
+- name: Create NetBox Site and Print Site Details
+  hosts: localhost
+  gather_facts: false
+  vars:
+    # HTTP NetBox API Connection Variables
+    netbox_url: "{{ lookup('env', 'NETBOX_URL') | default('http://netbox.mylab.local', true) }}"
+    netbox_token: "{{ lookup('env', 'NETBOX_TOKEN') | default('your_netbox_api_token_here', true) }}"
+
+  tasks:
+    - name: 1. Create/Ensure site 'test-site' in NetBox
+      netbox.netbox.netbox_site:
+        netbox_url: "{{ netbox_url }}"
+        netbox_token: "{{ netbox_token }}"
+        validate_certs: false
+        data:
+          name: "test-site"
+          slug: "test-site"
+          status: "active"
+        state: present
+      register: site_result
+
+    - name: Display created site details
+      ansible.builtin.debug:
+        msg:
+          - "Site Name: {{ site_result.site.name }}"
+          - "Site Slug: {{ site_result.site.slug }}"
+          - "Site ID: {{ site_result.site.id }}"
+
+    - name: 2. Query all NetBox Sites via REST API
+      ansible.builtin.uri:
+        url: "{{ netbox_url }}/api/dcim/sites/"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+          Accept: "application/json"
+        validate_certs: false
+      register: api_sites
+
+    - name: Display all site names retrieved from NetBox
+      ansible.builtin.debug:
+        msg: "All NetBox Sites: {{ api_sites.json.results | map(attribute='name') | list }}"
