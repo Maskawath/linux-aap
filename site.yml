@@ -1,0 +1,22 @@
+---
+- name: Query and Print NetBox Sites
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Query NetBox for existing Sites (Read-Only)
+      netbox.netbox.netbox_site_info:
+        netbox_url: "{{ lookup('env', 'NETBOX_API') | regex_replace('/+$', '') }}"
+        netbox_token: "{{ lookup('env', 'NETBOX_TOKEN') }}"
+        validate_certs: false
+      register: nb_sites
+
+    - name: Print all retrieved site data
+      ansible.builtin.debug:
+        var: nb_sites.netbox_sites
+        
+    - name: Print just the names of the sites
+      ansible.builtin.debug:
+        msg: "Found site: {{ item.name }} (Status: {{ item.status.label | default('Unknown') }})"
+      loop: "{{ nb_sites.netbox_sites }}"
+      loop_control:
+        label: "{{ item.name }}"
