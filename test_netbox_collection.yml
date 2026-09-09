@@ -4,7 +4,7 @@
   gather_facts: false
   tasks:
     - name: Query NetBox for existing Sites (Read-Only)
-      netbox.netbox.netbox_site_info:
+      netbox.netbox.netbox_site:
         validate_certs: false # Set to true in prod with valid CA certs
       register: nb_sites
 
