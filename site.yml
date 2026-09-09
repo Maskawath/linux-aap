@@ -1,22 +1,29 @@
 ---
-- name: Query and Print NetBox Sites
+- name: Query NetBox and Print Site Names
   hosts: localhost
   gather_facts: false
+  vars:
+    # Set your NetBox URL and API token here or pass via AAP Extra Variables / Environment
+    netbox_url: "{{ lookup('env', 'NETBOX_URL') | default('https://netbox.mylab.local', true) }}"
+    netbox_token: "{{ lookup('env', 'NETBOX_TOKEN') | default('your_netbox_api_token_here', true) }}"
+    netbox_validate_certs: false
+
   tasks:
     - name: Query NetBox for existing Sites (Read-Only)
       netbox.netbox.netbox_site_info:
-        netbox_url: "{{ lookup('env', 'NETBOX_API') | regex_replace('/+$', '') }}"
-        netbox_token: "{{ lookup('env', 'NETBOX_TOKEN') }}"
-        validate_certs: false
-      register: nb_sites
+        netbox_url: "{{ netbox_url }}"
+        netbox_token: "{{ netbox_token }}"
+        validate_certs: "{{ netbox_validate_certs }}"
+      register: netbox_sites
 
-    - name: Print all retrieved site data
+    - name: Display list of all Site Names
       ansible.builtin.debug:
-        var: nb_sites.netbox_sites
-        
-    - name: Print just the names of the sites
+        msg: "NetBox Sites: {{ netbox_sites.sites | map(attribute='name') | list }}"
+
+    - name: Print individual Site Names and details
       ansible.builtin.debug:
-        msg: "Found site: {{ item.name }} (Status: {{ item.status.label | default('Unknown') }})"
-      loop: "{{ nb_sites.netbox_sites }}"
+        msg: "Site Name: {{ item.name }} | Slug: {{ item.slug }} | Status: {{ item.status.label | default(item.status) }}"
+      loop: "{{ netbox_sites.sites }}"
       loop_control:
         label: "{{ item.name }}"
+
