@@ -1,0 +1,27 @@
+---
+- name: Raw API Validation - Bypass NetBox Collection
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Verify Environment Variables are Injected
+      ansible.builtin.assert:
+        that:
+          - lookup('env', 'NETBOX_API') != ""
+          - lookup('env', 'NETBOX_TOKEN') != ""
+        fail_msg: "FATAL: The NETBOX_API or NETBOX_TOKEN environment variables were not injected!"
+
+    - name: Execute Raw HTTP GET to NetBox API
+      ansible.builtin.uri:
+        url: "{{ lookup('env', 'NETBOX_API') }}/api/status/"
+        method: GET
+        headers:
+          Authorization: "Token {{ lookup('env', 'NETBOX_TOKEN') }}"
+          Accept: "application/json"
+        return_content: true
+        status_code: 200
+        validate_certs: false
+      register: raw_api_response
+
+    - name: Output Raw API Results
+      ansible.builtin.debug:
+        msg: "SUCCESS! Token is valid. NetBox Version is: {{ raw_api_response.json['netbox-version'] }}"
