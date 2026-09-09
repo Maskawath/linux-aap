@@ -4,16 +4,15 @@
   gather_facts: false
   vars:
     # Set your NetBox URL and API token here or pass via AAP Extra Variables / Environment
-    netbox_url: "{{ lookup('env', 'NETBOX_URL') | default('https://netbox.mylab.local', true) }}"
+    netbox_url: "{{ lookup('env', 'NETBOX_URL') | default('http://netbox.mylab.local', true) }}"
     netbox_token: "{{ lookup('env', 'NETBOX_TOKEN') | default('your_netbox_api_token_here', true) }}"
-    netbox_validate_certs: false
 
   tasks:
     - name: Query NetBox for existing Sites (Read-Only)
       netbox.netbox.netbox_site_info:
         netbox_url: "{{ netbox_url }}"
         netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        validate_certs: false
       register: netbox_sites
 
     - name: Display list of all Site Names
