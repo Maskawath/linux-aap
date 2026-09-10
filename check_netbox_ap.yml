@@ -1,0 +1,20 @@
+---
+- name: Validate NetBox API Connection and Token
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Execute Raw HTTP GET to NetBox API
+      ansible.builtin.uri:
+        url: "{{ lookup('env', 'NETBOX_API') | regex_replace('/+$', '') }}/api/status/"
+        method: GET
+        headers:
+          Authorization: "Token {{ lookup('env', 'NETBOX_TOKEN') }}"
+          Accept: "application/json"
+        validate_certs: false
+        return_content: true
+      register: netbox_status
+      failed_when: netbox_status.status != 200
+
+    - name: Output Raw API Results
+      ansible.builtin.debug:
+        msg: "SUCCESS! Token is valid. Connected to NetBox Version: {{ netbox_status.json['netbox-version'] }}"
