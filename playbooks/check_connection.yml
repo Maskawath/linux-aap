@@ -1,0 +1,15 @@
+---
+- name: Test Host Connection and Display Hostname
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Ping target host to confirm connectivity
+      ansible.builtin.ping:
+
+    - name: Display remote system hostname and distribution
+      ansible.builtin.debug:
+        msg:
+          - "Successfully connected to: {{ ansible_facts['hostname'] }}"
+          - "FQDN: {{ ansible_facts['fqdn'] }}"
+          - "OS: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}"
