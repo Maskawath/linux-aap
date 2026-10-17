@@ -1,0 +1,41 @@
+---
+- name: Generate Package Summary Report
+  hosts: all
+  become: true
+  vars:
+    target_package: "vim"
+
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Find binary path
+      ansible.builtin.command:
+        cmd: "which {{ target_package }}"
+      register: vim_path
+      changed_when: false
+      failed_when: false
+
+    - name: Determine version fact
+      ansible.builtin.set_fact:
+        pkg_version: >-
+          {% if target_package in ansible_facts.packages %}
+            {{ ansible_facts.packages[target_package][0].version }}
+          {% elif 'vim-enhanced' in ansible_facts.packages %}
+            {{ ansible_facts.packages['vim-enhanced'][0].version }}
+          {% else %}
+            Not Installed
+          {% endif %}
+
+    - name: Display Summary Report
+      ansible.builtin.debug:
+        msg:
+          - "----------------------------------------"
+          - "PACKAGE SUMMARY REPORT"
+          - "----------------------------------------"
+          - "Host: {{ inventory_hostname }}"
+          - "Package: {{ target_package }}"
+          - "Version: {{ pkg_version }}"
+          - "Executable Path: {{ vim_path.stdout if vim_path.rc == 0 else 'Not Found' }}"
+          - "----------------------------------------"

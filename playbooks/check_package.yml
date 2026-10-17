@@ -1,0 +1,18 @@
+---
+- name: Check Package Status for AAP Workflow
+  hosts: all
+  gather_facts: true
+  vars:
+    target_package: "vim"
+
+  tasks:
+    - name: Gather installed package facts
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Evaluate package presence
+      ansible.builtin.assert:
+        that:
+          - "target_package in ansible_facts.packages or 'vim-enhanced' in ansible_facts.packages or 'vim-minimal' in ansible_facts.packages"
+        success_msg: "{{ target_package }} is installed."
+        fail_msg: "{{ target_package }} is NOT installed."

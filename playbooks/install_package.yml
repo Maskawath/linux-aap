@@ -1,0 +1,12 @@
+---
+- name: Install Target Package
+  hosts: all
+  become: true
+  vars:
+    target_package: "vim"
+
+  tasks:
+    - name: Ensure package is installed
+      ansible.builtin.package:
+        name: "{{ target_package }}"
+        state: present
